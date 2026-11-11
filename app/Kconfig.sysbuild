@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Dojo Five
+# SPDX-License-Identifier: Apache-2.0
+
+source "share/sysbuild/Kconfig"
+
+config DEMO_DOWNGRADE_PREVENTION
+	bool "MCUboot refuses updates not newer than the running image"
+	default y
+	help
+	  Adds sysbuild/mcuboot_downgrade.conf to MCUboot. A separate fragment
+	  because a choice member cannot be turned off from a later one.

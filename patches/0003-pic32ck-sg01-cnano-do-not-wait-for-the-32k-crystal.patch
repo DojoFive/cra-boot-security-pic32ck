@@ -1,0 +1,29 @@
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts
+index 1322c4ae2..fed51a60c 100644
+--- a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts
+@@ -93,9 +93,14 @@
+ &clock {
+ 	compatible = "microchip,pic32ck-sg-gc-clock";
+ 
++	/*
++	 * Off: nothing here is clocked from it, and on boards where the 32.768 kHz
++	 * crystal does not start, the clock driver waits for it forever during
++	 * start-up, before the console or the LED work.
++	 */
+ 	xosc32k: xosc32k {
+ 		compatible = "microchip,pic32ck-sg-gc-xosc32k";
+-		xosc32k-enable = <1>;
++		xosc32k-enable = <0>;
+ 		xosc32k-xtal-en = <1>;
+ 		xosc32k-frequency = <32768>;
+ 		xosc32k-on-demand-en = <0>;
+@@ -103,7 +108,7 @@
+ 		xosc32k-servo-loop-en = <1>;
+ 		xosc32k-gain-boost = <1>;
+ 		xosc32k-startup-time = <1000>;
+-		xosc32k-rtc-clk-selection-en = <1>;
++		xosc32k-rtc-clk-selection-en = <0>;
+ 		xosc32k-cfd-en = <0>;
+ 		xosc32k-cfd-prescaler = <0>;
+ 		xosc32k-cfd-switchback-en = <0>;

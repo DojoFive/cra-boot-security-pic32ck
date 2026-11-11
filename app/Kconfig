@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Dojo Five
+# SPDX-License-Identifier: Apache-2.0
+
+config DEMO_BLINK_MS
+	int "LED toggle period in milliseconds"
+	default 1000
+	help
+	  Every vendor release blinks at the default, once a second. The
+	  attacker's builds set 250, and so does the factory command left in
+	  the v1.x releases.
+
+config DEMO_GOT_YOU
+	string "Attacker banner"
+	help
+	  Set only in the attacker builds (attacker/*.conf). When not empty the
+	  application prints "Got you! <this>" after its banner, so the
+	  audience sees attacker code running.
+
+config DEMO_FACTORY_UNLOCK
+	bool "Leftover factory unlock command"
+	default y
+	help
+	  The known hole in the v1.x releases: MCUmgr command 1 of the fuse group clears
+	  the simulated debug lock and speeds up the blink. The v2.x releases and the attacker builds turn it off.
+	  Replaying a genuine, signed v1.1.0 brings it back unless MCUboot
+	  refuses downgrades.
+
+source "Kconfig.zephyr"

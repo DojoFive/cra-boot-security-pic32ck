@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Dojo Five
+# SPDX-License-Identifier: Apache-2.0
+#
+# Build the firmware and the demo page in the devcontainer and publish them
+# to GitHub Pages. A tag also keeps a frozen copy under releases/<tag>/.
+
+name: Demo site
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # Container image names must be lowercase; organization names need not be.
+      - name: Image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}-dev" >> "$GITHUB_ENV"
+
+      # Branch builds push the devcontainer image as build cache for later runs.
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build firmware, test web client, assemble site
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: ${{ env.IMAGE }}
+          cacheFrom: ${{ env.IMAGE }}
+          push: filter
+          refFilterForPush: refs/heads/main
+          env: |
+            RELEASE=${{ github.ref_name }}
+            COMMIT=${{ github.sha }}
+            REPO=${{ github.server_url }}/${{ github.repository }}
+          runCmd: scripts/build-site.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site-${{ github.run_id }}
+          path: site/
+
+      - name: Deploy branch build
+        if: github.ref_type == 'branch'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site
+          keep_files: true
+
+      - name: Freeze tagged release under releases/<tag>/
+        if: github.ref_type == 'tag'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site
+          destination_dir: releases/${{ github.ref_name }}
+          keep_files: true

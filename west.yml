@@ -1,0 +1,25 @@
+# West manifest: upstream Zephyr at the commit the demo was tested on, plus
+# only the modules this build needs.
+manifest:
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+
+  projects:
+    # PIC32CK-SG device pack revision that goes with patches/0001.
+    - name: hal_microchip
+      remote: zephyrproject-rtos
+      revision: ec9372007f3c15f5994e0c3e6551c86584973a7c
+      path: modules/hal/microchip
+
+    - name: zephyr
+      remote: zephyrproject-rtos
+      revision: c4aa9324508f6226bc6c491f114dbecaf9dffb36
+      import:
+        name-allowlist:
+          - cmsis_6
+          - mbedtls
+          - tf-psa-crypto
+          - mcuboot
+          - picolibc
+          - zcbor

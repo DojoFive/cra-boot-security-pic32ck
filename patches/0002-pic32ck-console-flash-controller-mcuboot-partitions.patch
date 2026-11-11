@@ -1,0 +1,428 @@
+diff --git a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.dts b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.dts
+index ab19f1c72ea..896d6202549 100644
+--- a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.dts
++++ b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.dts
+@@ -15,7 +15,7 @@
+ 
+ 	chosen {
+ 		zephyr,sram = &sram0;
+-		zephyr,flash = &flash1;
++		zephyr,flash = &flash0;
+ 		zephyr,code-partition = &code_partition;
+ 		zephyr,console = &sercom5;
+ 		zephyr,shell-uart = &sercom5;
+@@ -65,30 +65,23 @@
+ 		#size-cells = <1>;
+ 		ranges;
+ 
++		/* Offsets are relative to the BFM base, 0x08000000; PFM starts at 0x4000000. */
+ 		boot_partition: partition@0 {
+ 			label = "boot_flash";
+ 			compatible = "zephyr,mapped-partition";
+ 			reg = <0x0 DT_SIZE_K(128)>;
+ 		};
+-	};
+-};
+-
+-&flash1 {
+-	partitions {
+-		#address-cells = <1>;
+-		#size-cells = <1>;
+-		ranges;
+ 
+-		code_partition: partition@0 {
++		code_partition: partition@4000000 {
+ 			label = "program_flash";
+ 			compatible = "zephyr,mapped-partition";
+-			reg = <0x0 DT_SIZE_K(2032)>;
++			reg = <0x4000000 DT_SIZE_K(2032)>;
+ 		};
+ 
+-		storage_partition: partition@1fc000 {
++		storage_partition: partition@41fc000 {
+ 			label = "storage";
+ 			compatible = "zephyr,mapped-partition";
+-			reg = <0x1fc000 DT_SIZE_K(16)>;
++			reg = <0x41fc000 DT_SIZE_K(16)>;
+ 		};
+ 	};
+ };
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano-pinctrl.dtsi b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano-pinctrl.dtsi
+new file mode 100644
+index 00000000000..6cb84a83d85
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano-pinctrl.dtsi
+@@ -0,0 +1,15 @@
++/*
++ * SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++#include <dt-bindings/pic32c/pic32ck_sg_gc/pic32ck_sg01/pic32ck2051sg01064-pinctrl.h>
++
++&pinctrl {
++	sercom5_uart_default: sercom5_uart_default {
++		group1 {
++			pinmux = <PA11C_SERCOM5_PAD0>, /* TX, nEDBG CDC RX */
++				 <PA12C_SERCOM5_PAD1>; /* RX, nEDBG CDC TX */
++		};
++	};
++};
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts
+index 6669680b65b..1322c4ae2f7 100644
+--- a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts
+@@ -7,6 +7,7 @@
+ /dts-v1/;
+ #include <microchip/pic32c/pic32ck_sg_gc/pic32ck_sg01/pic32ck2051sg01064.dtsi>
+ #include <zephyr/dt-bindings/input/input-event-codes.h>
++#include "pic32ck_sg01_cnano-pinctrl.dtsi"
+ 
+ / {
+ 	model = "PIC32CK SG01 Curiosity Nano";
+@@ -14,8 +15,10 @@
+ 
+ 	chosen {
+ 		zephyr,sram = &sram0;
+-		zephyr,flash = &flash1;
+-		zephyr,code-partition = &code_partition;
++		zephyr,flash = &flash0;
++		zephyr,code-partition = &slot0_partition;
++		zephyr,console = &sercom5;
++		zephyr,shell-uart = &sercom5;
+ 	};
+ 
+ 	aliases {
+@@ -49,30 +52,36 @@
+ 		#size-cells = <1>;
+ 		ranges;
+ 
++		/*
++		 * MCUboot layout, offsets relative to the BFM base 0x08000000:
++		 *   mcuboot  BFM  0x08000000  128 KB
++		 *   image-0  PFM  0x0C000000  1008 KB
++		 *   image-1  PFM  0x0C0FC000  1008 KB
++		 *   storage  PFM  0x0C1F8000  32 KB
++		 * Without MCUboot, applications run from image-0.
++		 */
+ 		boot_partition: partition@0 {
+-			label = "boot_flash";
++			label = "mcuboot";
+ 			compatible = "zephyr,mapped-partition";
+ 			reg = <0x0 DT_SIZE_K(128)>;
+ 		};
+-	};
+-};
+ 
+-&flash1 {
+-	partitions {
+-		#address-cells = <1>;
+-		#size-cells = <1>;
+-		ranges;
++		slot0_partition: partition@4000000 {
++			label = "image-0";
++			compatible = "zephyr,mapped-partition";
++			reg = <0x4000000 DT_SIZE_K(1008)>;
++		};
+ 
+-		code_partition: partition@0 {
+-			label = "program_flash";
++		slot1_partition: partition@40fc000 {
++			label = "image-1";
+ 			compatible = "zephyr,mapped-partition";
+-			reg = <0x0 DT_SIZE_K(2032)>;
++			reg = <0x40fc000 DT_SIZE_K(1008)>;
+ 		};
+ 
+-		storage_partition: partition@1fc000 {
++		storage_partition: partition@41f8000 {
+ 			label = "storage";
+ 			compatible = "zephyr,mapped-partition";
+-			reg = <0x1fc000 DT_SIZE_K(16)>;
++			reg = <0x41f8000 DT_SIZE_K(32)>;
+ 		};
+ 	};
+ };
+@@ -219,3 +228,19 @@
+ &portd {
+ 	status = "okay";
+ };
++
++/* Virtual COM port of the on-board nEDBG debugger */
++&sercom5 {
++	compatible = "microchip,sercom-g1-uart";
++	#address-cells = <1>;
++	#size-cells = <0>;
++	current-speed = <115200>;
++	data-bits = <8>;
++	parity = "none";
++	stop-bits = "1";
++	rxpo = <1>;
++	txpo = <0>;
++	pinctrl-0 = <&sercom5_uart_default>;
++	pinctrl-names = "default";
++	status = "okay";
++};
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.yaml b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.yaml
+index d99db107871..d4f5eb8456c 100644
+--- a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.yaml
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.yaml
+@@ -11,6 +11,8 @@ flash: 2032
+ ram: 512
+ supported:
+   - clock_control
++  - flash
+   - gpio
+   - pinctrl
++  - uart
+ vendor: microchip
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano_defconfig b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano_defconfig
+index 0a833daca24..d449b252df6 100644
+--- a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano_defconfig
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano_defconfig
+@@ -5,3 +5,6 @@ CONFIG_BUILD_OUTPUT_HEX=y
+ CONFIG_ARM_MPU=y
+ CONFIG_USE_DT_CODE_PARTITION=y
+ CONFIG_TRUSTED_EXECUTION_SECURE=y
++CONFIG_CONSOLE=y
++CONFIG_SERIAL=y
++CONFIG_UART_CONSOLE=y
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.dts b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.dts
+index 8663225e254..23f68e21177 100644
+--- a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.dts
++++ b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.dts
+@@ -15,7 +15,7 @@
+ 
+ 	chosen {
+ 		zephyr,sram = &sram0;
+-		zephyr,flash = &flash1;
++		zephyr,flash = &flash0;
+ 		zephyr,code-partition = &code_partition;
+ 		zephyr,console = &sercom5;
+ 		zephyr,shell-uart = &sercom5;
+@@ -65,30 +65,23 @@
+ 		#size-cells = <1>;
+ 		ranges;
+ 
++		/* Offsets are relative to the BFM base, 0x08000000; PFM starts at 0x4000000. */
+ 		boot_partition: partition@0 {
+ 			label = "boot_flash";
+ 			compatible = "zephyr,mapped-partition";
+ 			reg = <0x0 DT_SIZE_K(128)>;
+ 		};
+-	};
+-};
+-
+-&flash1 {
+-	partitions {
+-		#address-cells = <1>;
+-		#size-cells = <1>;
+-		ranges;
+ 
+-		code_partition: partition@0 {
++		code_partition: partition@4000000 {
+ 			label = "program_flash";
+ 			compatible = "zephyr,mapped-partition";
+-			reg = <0x0 DT_SIZE_K(2032)>;
++			reg = <0x4000000 DT_SIZE_K(2032)>;
+ 		};
+ 
+-		storage_partition: partition@1fc000 {
++		storage_partition: partition@41fc000 {
+ 			label = "storage";
+ 			compatible = "zephyr,mapped-partition";
+-			reg = <0x1fc000 DT_SIZE_K(16)>;
++			reg = <0x41fc000 DT_SIZE_K(16)>;
+ 		};
+ 	};
+ };
+diff --git a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_0512_sg_gc.dtsi b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_0512_sg_gc.dtsi
+index 21a17ecf5d8..4e0ced902b3 100644
+--- a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_0512_sg_gc.dtsi
++++ b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_0512_sg_gc.dtsi
+@@ -5,15 +5,15 @@
+  */
+ / {
+ 	soc {
+-		flash-controller@44004000 {
++		flash-controller@44002000 {
+ 			flash0: flash@8000000 {
+-				reg = <0x08000000 DT_SIZE_K(128)>;
+-				ranges = <0x0 0x08000000 DT_SIZE_K(128)>;
+-			};
+-
+-			flash1: flash@c000000 {
+-				reg = <0x0c000000 DT_SIZE_K(512)>;
+-				ranges = <0x0 0x0c000000 DT_SIZE_K(512)>;
++				/* BFM 128 KB, unimplemented gap, PFM */
++				reg = <0x08000000
++				       (DT_SIZE_K(128) + DT_SIZE_K(65408) + DT_SIZE_K(512))>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0x0 0x08000000
++					  (DT_SIZE_K(128) + DT_SIZE_K(65408) + DT_SIZE_K(512))>;
+ 			};
+ 		};
+ 
+diff --git a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1012_sg_gc.dtsi b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1012_sg_gc.dtsi
+index c0a49f6ac0f..09b5d8e4beb 100644
+--- a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1012_sg_gc.dtsi
++++ b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1012_sg_gc.dtsi
+@@ -5,15 +5,15 @@
+  */
+ / {
+ 	soc {
+-		flash-controller@44004000 {
++		flash-controller@44002000 {
+ 			flash0: flash@8000000 {
+-				reg = <0x08000000 DT_SIZE_K(128)>;
+-				ranges = <0x0 0x08000000 DT_SIZE_K(128)>;
+-			};
+-
+-			flash1: flash@c000000 {
+-				reg = <0x0c000000 DT_SIZE_M(1)>;
+-				ranges = <0x0 0x0c000000 DT_SIZE_M(1)>;
++				/* BFM 128 KB, unimplemented gap, PFM */
++				reg = <0x08000000
++				       (DT_SIZE_K(128) + DT_SIZE_K(65408) + DT_SIZE_M(1))>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0x0 0x08000000
++					  (DT_SIZE_K(128) + DT_SIZE_K(65408) + DT_SIZE_M(1))>;
+ 			};
+ 		};
+ 
+diff --git a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1025_sg_gc.dtsi b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1025_sg_gc.dtsi
+index 03c0dffa8cd..5a4eba8cece 100644
+--- a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1025_sg_gc.dtsi
++++ b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1025_sg_gc.dtsi
+@@ -6,15 +6,15 @@
+ 
+ / {
+ 	soc {
+-		flash-controller@44004000 {
++		flash-controller@44002000 {
+ 			flash0: flash@8000000 {
+-				reg = <0x08000000 DT_SIZE_K(128)>;
+-				ranges = <0x0 0x08000000 DT_SIZE_K(128)>;
+-			};
+-
+-			flash1: flash@c000000 {
+-				reg = <0x0c000000 DT_SIZE_M(1)>;
+-				ranges = <0x0 0x0c000000 DT_SIZE_M(1)>;
++				/* BFM 128 KB, unimplemented gap, PFM */
++				reg = <0x08000000
++				       (DT_SIZE_K(128) + DT_SIZE_K(65408) + DT_SIZE_M(1))>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0x0 0x08000000
++					  (DT_SIZE_K(128) + DT_SIZE_K(65408) + DT_SIZE_M(1))>;
+ 			};
+ 		};
+ 
+diff --git a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_2051_sg_gc.dtsi b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_2051_sg_gc.dtsi
+index 86465c31de4..cd5d64f2a4f 100644
+--- a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_2051_sg_gc.dtsi
++++ b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_2051_sg_gc.dtsi
+@@ -6,15 +6,15 @@
+ 
+ / {
+ 	soc {
+-		flash-controller@44004000 {
++		flash-controller@44002000 {
+ 			flash0: flash@8000000 {
+-				reg = <0x08000000 DT_SIZE_K(128)>;
+-				ranges = <0x0 0x08000000 DT_SIZE_K(128)>;
+-			};
+-
+-			flash1: flash@c000000 {
+-				reg = <0x0c000000 DT_SIZE_M(2)>;
+-				ranges = <0x0 0x0c000000 DT_SIZE_M(2)>;
++				/* BFM 128 KB, unimplemented gap, PFM */
++				reg = <0x08000000
++				       (DT_SIZE_K(128) + DT_SIZE_K(65408) + DT_SIZE_M(2))>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0x0 0x08000000
++					  (DT_SIZE_K(128) + DT_SIZE_K(65408) + DT_SIZE_M(2))>;
+ 			};
+ 		};
+ 
+diff --git a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_sg_gc.dtsi b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_sg_gc.dtsi
+index fe8b31b8c33..7026c9bf54b 100644
+--- a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_sg_gc.dtsi
++++ b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_sg_gc.dtsi
+@@ -28,22 +28,35 @@
+ 	};
+ 
+ 	soc {
+-		nvmctrl: flash-controller@44004000 {
+-			reg = <0x44004000 0x7c>;
++		nvmctrl: flash-controller@44002000 {
++			compatible = "microchip,nvmctrl-g3";
++			reg = <0x44002000 0x60>, <0x44004000 0x7c>;
++			reg-names = "fcr", "fcw";
++			clock-parent = <&clock>;
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_FCW_AHB>,
++				 <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_FCW_APB>,
++				 <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_FCR_AHB>,
++				 <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_FCR_APB>;
++			clock-names = "mclk-fcw-ahb", "mclk-fcw-apb", "mclk-fcr-ahb",
++				      "mclk-fcr-apb";
++			interrupts = <0 0>, <1 0>, <2 0>;
++			interrupt-names = "fcr-err", "fcr-flt", "fcw";
+ 			#address-cells = <1>;
+ 			#size-cells = <1>;
+ 			ranges;
+ 
++			/*
++			 * One flash device spanning BFM (0x08000000), the unimplemented
++			 * gap and PFM (0x0C000000), so that partitions in both regions,
++			 * such as MCUboot in BFM and its slots in PFM, share one driver.
++			 */
+ 			flash0: flash@8000000 {
+-				compatible = "soc-nv-flash";
+-				#address-cells = <1>;
+-				#size-cells = <1>;
+-			};
+-
+-			flash1: flash@c000000 {
+-				compatible = "soc-nv-flash";
+-				#address-cells = <1>;
+-				#size-cells = <1>;
++				compatible = "microchip,flash-g3", "soc-nv-flash";
++				write-block-size = <8>;
++				write-block-size-quad-dw = <32>;
++				write-block-size-row = <DT_SIZE_K(1)>;
++				erase-block-size = <DT_SIZE_K(4)>;
++				unimplemented-region = <0x08020000 0x0bffffff>;
+ 			};
+ 		};
+ 
+diff --git a/soc/microchip/pic32c/pic32ck_sg_gc/Kconfig.defconfig b/soc/microchip/pic32c/pic32ck_sg_gc/Kconfig.defconfig
+index 32a2ab4c271..e9b81b23915 100644
+--- a/soc/microchip/pic32c/pic32ck_sg_gc/Kconfig.defconfig
++++ b/soc/microchip/pic32c/pic32ck_sg_gc/Kconfig.defconfig
+@@ -9,14 +9,21 @@ config NUM_IRQS
+ config SYS_CLOCK_HW_CYCLES_PER_SEC
+ 	default $(dt_node_int_prop_int,/cpus/cpu@0,clock-frequency)
+ 
++# Under MCUboot each application image keeps its vector table in PFM after
++# the image header. 0x400 satisfies VTOR alignment for NUM_IRQS=158:
++# next_power_of_2((16 + 158) * 4) = 1024.
++config ROM_START_OFFSET
++	default 0x400 if BOOTLOADER_MCUBOOT && !MCUBOOT
++
+ config ROMSTART_RELOCATION_ROM
++	default n if BOOTLOADER_MCUBOOT || MCUBOOT
+ 	default y
+ 
+ config ROMSTART_REGION_ADDRESS
+ 	default $(dt_nodelabel_reg_addr_hex,flash0)
+ 
+ config ROMSTART_REGION_SIZE
+-	default $(dt_nodelabel_reg_size_hex,flash0,0,k)
++	default $(dt_nodelabel_reg_size_hex,boot_partition,0,k)
+ 
+ config ARM_TRUSTZONE_M
+ 	default y

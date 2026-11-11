@@ -1,0 +1,24 @@
+// Build environment for the demo. Flashing happens from the browser page:
+// Docker on macOS has no USB passthrough.
+{
+	"name": "boot-security-demo",
+	"build": { "dockerfile": "Dockerfile" },
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": false,
+			"installOhMyZsh": false,
+			"upgradePackages": false,
+			"username": "${localEnv:USER}",
+			"userUid": "automatic",
+			"userGid": "automatic"
+		},
+		"ghcr.io/devcontainers/features/node:1": { "version": "20" }
+	},
+	"remoteUser": "${localEnv:USER}",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/west-workspace/demo,type=bind",
+	"workspaceFolder": "/west-workspace/demo",
+	"containerEnv": { "CCACHE_DIR": "/west-workspace/demo/.ccache" },
+	"remoteEnv": { "PATH": "/west-workspace/.venv/bin:${containerEnv:PATH}" },
+	"forwardPorts": [8000],
+	"postCreateCommand": "scripts/setup.sh"
+}

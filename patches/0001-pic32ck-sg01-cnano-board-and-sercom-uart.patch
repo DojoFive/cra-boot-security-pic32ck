@@ -1,0 +1,755 @@
+diff --git a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult-pinctrl.dtsi b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult-pinctrl.dtsi
+new file mode 100644
+index 00000000000..a4647a9f031
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult-pinctrl.dtsi
+@@ -0,0 +1,30 @@
++/*
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++#include <dt-bindings/pic32c/pic32ck_sg_gc/pic32ck_gc01/pic32ck2051gc01144-pinctrl.h>
++
++&pinctrl {
++	sercom1_uart_default: sercom1_uart_default {
++		group1 {
++			pinmux = <PD13C_SERCOM1_PAD0>, /* TX */
++				 <PD14C_SERCOM1_PAD1>; /* RX */
++		};
++	};
++
++	sercom3_uart_default: sercom3_uart_default {
++		group1 {
++			pinmux = <PB21C_SERCOM3_PAD0>, /* TX */
++				 <PB22C_SERCOM3_PAD1>; /* RX */
++		};
++	};
++
++	sercom5_uart_default: sercom5_uart_default {
++		group1 {
++			pinmux = <PA24C_SERCOM5_PAD0>, /* TX */
++				 <PA25C_SERCOM5_PAD1>; /* RX */
++		};
++	};
++};
+diff --git a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.dts b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.dts
+index da40a16c490..ab19f1c72ea 100644
+--- a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.dts
++++ b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.dts
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2026 Microchip Technology Inc.
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+  *
+  * SPDX-License-Identifier: Apache-2.0
+  */
+@@ -7,6 +7,7 @@
+ /dts-v1/;
+ #include <microchip/pic32c/pic32ck_sg_gc/pic32ck_gc01/pic32ck2051gc01144.dtsi>
+ #include <zephyr/dt-bindings/input/input-event-codes.h>
++#include "pic32ck_gc01_cult-pinctrl.dtsi"
+ 
+ / {
+ 	model = "PIC32CK GC01 Curiosity Ultra";
+@@ -16,6 +17,8 @@
+ 		zephyr,sram = &sram0;
+ 		zephyr,flash = &flash1;
+ 		zephyr,code-partition = &code_partition;
++		zephyr,console = &sercom5;
++		zephyr,shell-uart = &sercom5;
+ 	};
+ 
+ 	aliases {
+@@ -292,3 +295,18 @@
+ &portd {
+ 	status = "okay";
+ };
++
++&sercom5 {
++	compatible = "microchip,sercom-g1-uart";
++	#address-cells = <1>;
++	#size-cells = <0>;
++	current-speed = <115200>;
++	data-bits = <8>;
++	parity = "none";
++	stop-bits = "1";
++	rxpo = <1>;
++	txpo = <0>;
++	pinctrl-0 = <&sercom5_uart_default>;
++	pinctrl-names = "default";
++	status = "okay";
++};
+diff --git a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.yaml b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.yaml
+index 22d579e7c91..18563966623 100644
+--- a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.yaml
++++ b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult.yaml
+@@ -1,4 +1,4 @@
+-# Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+ # SPDX-License-Identifier: Apache-2.0
+ 
+ identifier: pic32ck_gc01_cult
+@@ -13,4 +13,5 @@ supported:
+   - clock_control
+   - gpio
+   - pinctrl
++  - uart
+ vendor: microchip
+diff --git a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult_defconfig b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult_defconfig
+index a0e5075e2ce..37fe003621d 100644
+--- a/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult_defconfig
++++ b/boards/microchip/pic32c/pic32ck_gc01_cult/pic32ck_gc01_cult_defconfig
+@@ -1,6 +1,9 @@
+-# Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+ # SPDX-License-Identifier: Apache-2.0
+ 
+ CONFIG_BUILD_OUTPUT_HEX=y
+ CONFIG_ARM_MPU=y
+ CONFIG_USE_DT_CODE_PARTITION=y
++CONFIG_CONSOLE=y
++CONFIG_SERIAL=y
++CONFIG_UART_CONSOLE=y
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/Kconfig.pic32ck_sg01_cnano b/boards/microchip/pic32c/pic32ck_sg01_cnano/Kconfig.pic32ck_sg01_cnano
+new file mode 100644
+index 00000000000..222df5553ec
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/Kconfig.pic32ck_sg01_cnano
+@@ -0,0 +1,5 @@
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-License-Identifier: Apache-2.0
++
++config BOARD_PIC32CK_SG01_CNANO
++	select SOC_PIC32CK2051SG01064
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/board.cmake b/boards/microchip/pic32c/pic32ck_sg01_cnano/board.cmake
+new file mode 100644
+index 00000000000..782daec034b
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/board.cmake
+@@ -0,0 +1,8 @@
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-License-Identifier: Apache-2.0
++
++board_runner_args(mplab_ipe "--tool" "nEDBG" "--part" "32CK2051SG01064" "--erase" "--verify")
++board_runner_args(jlink "--device=PIC32CK2051SG" "--speed=4000")
++
++include(${ZEPHYR_BASE}/boards/common/mplab_ipe.board.cmake)
++include(${ZEPHYR_BASE}/boards/common/jlink.board.cmake)
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/board.yml b/boards/microchip/pic32c/pic32ck_sg01_cnano/board.yml
+new file mode 100644
+index 00000000000..efb0a17b9b1
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/board.yml
+@@ -0,0 +1,9 @@
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-License-Identifier: Apache-2.0
++
++board:
++  name: pic32ck_sg01_cnano
++  full_name: PIC32CK SG01 Curiosity Nano
++  vendor: microchip
++  socs:
++    - name: pic32ck2051sg01064
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts
+new file mode 100644
+index 00000000000..6669680b65b
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.dts
+@@ -0,0 +1,221 @@
++/*
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++/dts-v1/;
++#include <microchip/pic32c/pic32ck_sg_gc/pic32ck_sg01/pic32ck2051sg01064.dtsi>
++#include <zephyr/dt-bindings/input/input-event-codes.h>
++
++/ {
++	model = "PIC32CK SG01 Curiosity Nano";
++	compatible = "microchip,pic32ck_sg01_cnano";
++
++	chosen {
++		zephyr,sram = &sram0;
++		zephyr,flash = &flash1;
++		zephyr,code-partition = &code_partition;
++	};
++
++	aliases {
++		led0 = &led0;
++		sw0 = &button0;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led0: led_0 {
++			gpios = <&portd 5 GPIO_ACTIVE_HIGH>;
++			label = "LED0";
++		};
++	};
++
++	buttons {
++		compatible = "gpio-keys";
++
++		button0: button_0 {
++			gpios = <&portd 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
++			label = "SW0";
++			zephyr,code = <INPUT_KEY_0>;
++		};
++	};
++};
++
++&flash0 {
++	partitions {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++
++		boot_partition: partition@0 {
++			label = "boot_flash";
++			compatible = "zephyr,mapped-partition";
++			reg = <0x0 DT_SIZE_K(128)>;
++		};
++	};
++};
++
++&flash1 {
++	partitions {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++
++		code_partition: partition@0 {
++			label = "program_flash";
++			compatible = "zephyr,mapped-partition";
++			reg = <0x0 DT_SIZE_K(2032)>;
++		};
++
++		storage_partition: partition@1fc000 {
++			label = "storage";
++			compatible = "zephyr,mapped-partition";
++			reg = <0x1fc000 DT_SIZE_K(16)>;
++		};
++	};
++};
++
++&cpu0 {
++	clock-frequency = <120000000>;
++};
++
++&clock {
++	compatible = "microchip,pic32ck-sg-gc-clock";
++
++	xosc32k: xosc32k {
++		compatible = "microchip,pic32ck-sg-gc-xosc32k";
++		xosc32k-enable = <1>;
++		xosc32k-xtal-en = <1>;
++		xosc32k-frequency = <32768>;
++		xosc32k-on-demand-en = <0>;
++		xosc32k-control-gain-mode = "lower-gain-mode-value";
++		xosc32k-servo-loop-en = <1>;
++		xosc32k-gain-boost = <1>;
++		xosc32k-startup-time = <1000>;
++		xosc32k-rtc-clk-selection-en = <1>;
++		xosc32k-cfd-en = <0>;
++		xosc32k-cfd-prescaler = <0>;
++		xosc32k-cfd-switchback-en = <0>;
++	};
++
++	dfll48m: dfll48m {
++		compatible = "microchip,pic32ck-sg-gc-dfll48m";
++		dfll48m-src-gclk = "gclk1";
++		dfll48m-enable = <1>;
++		dfll48m-closed-loop-en = <0>;
++		dfll48m-on-demand-en = <1>;
++		dfll48m-usb-clock-recovery-mode = <1>;
++		dfll48m-wait-lock-en = <1>;
++		dfll48m-quick-lock-dis = <1>;
++		dfll48m-chill-cycle-dis = <1>;
++		dfll48m-lose-lock-en = <1>;
++		dfll48m-stable-freq-en = <1>;
++		dfll48m-tune-max-step = <1>;
++		dfll48m-multiply-factor = <1>;
++	};
++
++	pll: pll {
++		compatible = "microchip,pic32ck-sg-gc-pll";
++
++		pll0: pll0 {
++			subsystem = <CLOCK_MCHP_PLL_ID_PLL0>;
++			pll-enable = <1>;
++			pll-on-demand-en = <0>;
++			pll-bandwidth-sel = "bwsel-1";
++			pll-src = "dfll48m";
++			pll-ref-division-factor = <12>;
++			pll-feedback-divider-factor = <300>; /* VCO = 1200 MHz */
++			pll-freq-division-factor-int = <0>;
++			pll-freq-division-factor-rem = <0>;
++
++			pll0out0: pll0out0 {
++				subsystem = <CLOCK_MCHP_PLL0_ID_OUT0>;
++				pll-output-division-factor = <10>; /* CPU 1200/10 = 120 MHz */
++				pll-output-en = <1>;
++			};
++
++			pll0out1: pll0out1 {
++				subsystem = <CLOCK_MCHP_PLL0_ID_OUT1>;
++				pll-output-division-factor = <8>;
++				pll-output-en = <0>;
++			};
++
++			pll0out2: pll0out2 {
++				subsystem = <CLOCK_MCHP_PLL0_ID_OUT2>;
++				pll-output-division-factor = <8>;
++				pll-output-en = <0>;
++			};
++
++			pll0out3: pll0out3 {
++				subsystem = <CLOCK_MCHP_PLL0_ID_OUT3>;
++				pll-output-division-factor = <8>;
++				pll-output-en = <0>;
++			};
++
++			pll0out4: pll0out4 {
++				subsystem = <CLOCK_MCHP_PLL0_ID_OUT4>;
++				pll-output-division-factor = <8>;
++				pll-output-en = <0>;
++			};
++
++			pll0out5: pll0out5 {
++				subsystem = <CLOCK_MCHP_PLL0_ID_OUT5>;
++				pll-output-division-factor = <8>;
++				pll-output-en = <0>;
++			};
++		};
++	};
++
++	gclkgen: gclkgen {
++		compatible = "microchip,pic32ck-sg-gc-gclkgen";
++
++		gclkgen0 {
++			subsystem = <CLOCK_MCHP_GCLKGEN_ID_GEN0>;
++			gclkgen-en = <1>;
++			gclkgen-run-in-standby-en = <0>;
++			gclkgen-ext-input-frequency = <0>;
++			gclkgen-src = "pll0_0";
++			gclkgen-output-off-val = "logic-level-0";
++			gclkgen-input-frequency = <0>;
++			gclkgen-div-select = "div-factor";
++			gclkgen-div-factor = <1>;
++			gclkgen-duty-50-50-en = <0>;
++			gclkgen-out-clock-signal = <0>;
++		};
++
++		gclkgen1 {
++			subsystem = <CLOCK_MCHP_GCLKGEN_ID_GEN1>;
++			gclkgen-en = <1>;
++			gclkgen-run-in-standby-en = <0>;
++			gclkgen-ext-input-frequency = <0>;
++			gclkgen-src = "pll0_0";
++			gclkgen-output-off-val = "logic-level-0";
++			gclkgen-input-frequency = <0>;
++			gclkgen-div-select = "div-factor";
++			gclkgen-div-factor = <2>;
++			gclkgen-duty-50-50-en = <0>;
++			gclkgen-out-clock-signal = <0>;
++		};
++	};
++
++	gclkperiph: gclkperiph {
++		compatible = "microchip,pic32ck-sg-gc-gclkperiph";
++		#clock-cells = <1>;
++	};
++
++	mclkcpu: mclkcpu {
++		compatible = "microchip,pic32ck-sg-gc-mclkcpu";
++		mclk-div = "DIV1";
++	};
++
++	mclkperiph: mclkperiph {
++		compatible = "microchip,pic32ck-sg-gc-mclkperiph";
++		#clock-cells = <1>;
++	};
++};
++
++&portd {
++	status = "okay";
++};
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.yaml b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.yaml
+new file mode 100644
+index 00000000000..d99db107871
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano.yaml
+@@ -0,0 +1,16 @@
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-License-Identifier: Apache-2.0
++
++identifier: pic32ck_sg01_cnano
++name: PIC32CK SG01 Curiosity Nano
++type: mcu
++arch: arm
++toolchain:
++  - zephyr
++flash: 2032
++ram: 512
++supported:
++  - clock_control
++  - gpio
++  - pinctrl
++vendor: microchip
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano_defconfig b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano_defconfig
+new file mode 100644
+index 00000000000..0a833daca24
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_sg01_cnano/pic32ck_sg01_cnano_defconfig
+@@ -0,0 +1,7 @@
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-License-Identifier: Apache-2.0
++
++CONFIG_BUILD_OUTPUT_HEX=y
++CONFIG_ARM_MPU=y
++CONFIG_USE_DT_CODE_PARTITION=y
++CONFIG_TRUSTED_EXECUTION_SECURE=y
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult-pinctrl.dtsi b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult-pinctrl.dtsi
+new file mode 100644
+index 00000000000..e8e29ed1944
+--- /dev/null
++++ b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult-pinctrl.dtsi
+@@ -0,0 +1,30 @@
++/*
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
++ *
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++#include <dt-bindings/pic32c/pic32ck_sg_gc/pic32ck_sg01/pic32ck2051sg01144-pinctrl.h>
++
++&pinctrl {
++	sercom1_uart_default: sercom1_uart_default {
++		group1 {
++			pinmux = <PD13C_SERCOM1_PAD0>, /* TX */
++				 <PD14C_SERCOM1_PAD1>; /* RX */
++		};
++	};
++
++	sercom3_uart_default: sercom3_uart_default {
++		group1 {
++			pinmux = <PB21C_SERCOM3_PAD0>, /* TX */
++				 <PB22C_SERCOM3_PAD1>; /* RX */
++		};
++	};
++
++	sercom5_uart_default: sercom5_uart_default {
++		group1 {
++			pinmux = <PA24C_SERCOM5_PAD0>, /* TX */
++				 <PA25C_SERCOM5_PAD1>; /* RX */
++		};
++	};
++};
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.dts b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.dts
+index 13555c4ff76..8663225e254 100644
+--- a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.dts
++++ b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.dts
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2026 Microchip Technology Inc.
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+  *
+  * SPDX-License-Identifier: Apache-2.0
+  */
+@@ -7,6 +7,7 @@
+ /dts-v1/;
+ #include <microchip/pic32c/pic32ck_sg_gc/pic32ck_sg01/pic32ck2051sg01144.dtsi>
+ #include <zephyr/dt-bindings/input/input-event-codes.h>
++#include "pic32ck_sg01_cult-pinctrl.dtsi"
+ 
+ / {
+ 	model = "PIC32CK SG01 Curiosity Ultra";
+@@ -16,6 +17,8 @@
+ 		zephyr,sram = &sram0;
+ 		zephyr,flash = &flash1;
+ 		zephyr,code-partition = &code_partition;
++		zephyr,console = &sercom5;
++		zephyr,shell-uart = &sercom5;
+ 	};
+ 
+ 	aliases {
+@@ -264,3 +267,18 @@
+ &portd {
+ 	status = "okay";
+ };
++
++&sercom5 {
++	compatible = "microchip,sercom-g1-uart";
++	#address-cells = <1>;
++	#size-cells = <0>;
++	current-speed = <115200>;
++	data-bits = <8>;
++	parity = "none";
++	stop-bits = "1";
++	rxpo = <1>;
++	txpo = <0>;
++	pinctrl-0 = <&sercom5_uart_default>;
++	pinctrl-names = "default";
++	status = "okay";
++};
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.yaml b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.yaml
+index 9df58e69504..ede8a4900ba 100644
+--- a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.yaml
++++ b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult.yaml
+@@ -1,4 +1,4 @@
+-# Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+ # SPDX-License-Identifier: Apache-2.0
+ 
+ identifier: pic32ck_sg01_cult
+@@ -13,4 +13,5 @@ supported:
+   - clock_control
+   - gpio
+   - pinctrl
++  - uart
+ vendor: microchip
+diff --git a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult_defconfig b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult_defconfig
+index 1308a46496b..d449b252df6 100644
+--- a/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult_defconfig
++++ b/boards/microchip/pic32c/pic32ck_sg01_cult/pic32ck_sg01_cult_defconfig
+@@ -1,7 +1,10 @@
+-# Copyright (c) 2026 Microchip Technology Inc.
++# SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+ # SPDX-License-Identifier: Apache-2.0
+ 
+ CONFIG_BUILD_OUTPUT_HEX=y
+ CONFIG_ARM_MPU=y
+ CONFIG_USE_DT_CODE_PARTITION=y
+ CONFIG_TRUSTED_EXECUTION_SECURE=y
++CONFIG_CONSOLE=y
++CONFIG_SERIAL=y
++CONFIG_UART_CONSOLE=y
+diff --git a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1025_sg_gc.dtsi b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1025_sg_gc.dtsi
+index 0513388b099..03c0dffa8cd 100644
+--- a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1025_sg_gc.dtsi
++++ b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_1025_sg_gc.dtsi
+@@ -1,8 +1,9 @@
+ /*
+- * Copyright (c) 2026 Microchip Technology Inc.
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+  *
+  * SPDX-License-Identifier: Apache-2.0
+  */
++
+ / {
+ 	soc {
+ 		flash-controller@44004000 {
+@@ -20,5 +21,27 @@
+ 		sram0: memory@20000000 {
+ 			reg = <0x20000000 DT_SIZE_K(256)>;
+ 		};
++
++		sercom6: sercom@45004000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x45004000 0x38>;
++			interrupts = <108 0>, <109 0>, <110 0>, <111 0>, <112 0>, <113 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM6_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM6_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
++
++		sercom7: sercom@45008000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x45008000 0x38>;
++			interrupts = <114 0>, <115 0>, <116 0>, <117 0>, <118 0>, <119 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM7_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM7_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
+ 	};
+ };
+diff --git a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_2051_sg_gc.dtsi b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_2051_sg_gc.dtsi
+index 9b03aeeafc4..86465c31de4 100644
+--- a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_2051_sg_gc.dtsi
++++ b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_2051_sg_gc.dtsi
+@@ -1,8 +1,9 @@
+ /*
+- * Copyright (c) 2026 Microchip Technology Inc.
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+  *
+  * SPDX-License-Identifier: Apache-2.0
+  */
++
+ / {
+ 	soc {
+ 		flash-controller@44004000 {
+@@ -20,5 +21,27 @@
+ 		sram0: memory@20000000 {
+ 			reg = <0x20000000 DT_SIZE_K(512)>;
+ 		};
++
++		sercom6: sercom@45004000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x45004000 0x38>;
++			interrupts = <108 0>, <109 0>, <110 0>, <111 0>, <112 0>, <113 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM6_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM6_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
++
++		sercom7: sercom@45008000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x45008000 0x38>;
++			interrupts = <114 0>, <115 0>, <116 0>, <117 0>, <118 0>, <119 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM7_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM7_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
+ 	};
+ };
+diff --git a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_sg_gc.dtsi b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_sg_gc.dtsi
+index 7d231626236..fe8b31b8c33 100644
+--- a/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_sg_gc.dtsi
++++ b/dts/arm/microchip/pic32c/pic32ck_sg_gc/common/pic32ck_sg_gc.dtsi
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2026 Microchip Technology Inc.
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+  *
+  * SPDX-License-Identifier: Apache-2.0
+  */
+@@ -131,6 +131,72 @@
+ 				#clock-cells = <1>;
+ 			};
+ 		};
++
++		sercom0: sercom@44810000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x44810000 0x38>;
++			interrupts = <44 0>, <45 0>, <46 0>, <47 0>, <48 0>, <49 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM0_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM0_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
++
++		sercom1: sercom@44812000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x44812000 0x38>;
++			interrupts = <50 0>, <51 0>, <52 0>, <53 0>, <54 0>, <55 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM1_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM1_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
++
++		sercom2: sercom@44814000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x44814000 0x38>;
++			interrupts = <56 0>, <57 0>, <58 0>, <59 0>, <60 0>, <61 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM2_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM2_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
++
++		sercom3: sercom@44816000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x44816000 0x38>;
++			interrupts = <62 0>, <63 0>, <64 0>, <65 0>, <66 0>, <67 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM3_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM3_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
++
++		sercom4: sercom@45000000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x45000000 0x38>;
++			interrupts = <96 0>, <97 0>, <98 0>, <99 0>, <100 0>, <101 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM4_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM4_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
++
++		sercom5: sercom@45002000 {
++			compatible = "microchip,sercom-g1";
++			reg = <0x45002000 0x38>;
++			interrupts = <102 0>, <103 0>, <104 0>, <105 0>, <106 0>, <107 0>;
++			interrupt-names = "error", "dre", "txc", "rxc", "rxs", "ctsic";
++			clocks = <&mclkperiph CLOCK_MCHP_MCLKPERIPH_ID_SERCOM5_APB>,
++				 <&gclkperiph CLOCK_MCHP_GCLKPERIPH_ID_SERCOM5_CORE>;
++			clock-names = "mclk", "gclk";
++			status = "disabled";
++		};
+ 	};
+ };
+ 
+diff --git a/dts/bindings/serial/microchip,sercom-g1-uart.yaml b/dts/bindings/serial/microchip,sercom-g1-uart.yaml
+index 2d3332ae61c..c1dacccd0cd 100644
+--- a/dts/bindings/serial/microchip,sercom-g1-uart.yaml
++++ b/dts/bindings/serial/microchip,sercom-g1-uart.yaml
+@@ -8,6 +8,7 @@ description: |
+ 
+   Group g1 SERCOM UART driver supports following hardware peripherals:
+     - module name="SERCOM" id="U2201" version="3.1.1","5.0.0"
++    - module name="SERCOM" id="03715" version="6b0","6c0"
+ 
+ compatible: "microchip,sercom-g1-uart"
+ 
+diff --git a/soc/microchip/pic32c/pic32ck_sg_gc/pic32ck_gc01/soc.h b/soc/microchip/pic32c/pic32ck_sg_gc/pic32ck_gc01/soc.h
+index d809acf2b12..be68977abf7 100644
+--- a/soc/microchip/pic32c/pic32ck_sg_gc/pic32ck_gc01/soc.h
++++ b/soc/microchip/pic32c/pic32ck_sg_gc/pic32ck_gc01/soc.h
+@@ -1,6 +1,5 @@
+ /*
+- * Copyright (c) 2026 Microchip Technology Inc.
+- *
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -35,6 +34,8 @@
+ #error "Library does not support the specified device."
+ #endif
+ 
++#include "pic32ck_sg_gc.h"
++
+ #endif /* _ASMLANGUAGE */
+ 
+ #endif /* SOC_MICROCHIP_PIC32CK_GC01_H_ */
+diff --git a/soc/microchip/pic32c/pic32ck_sg_gc/pic32ck_sg01/soc.h b/soc/microchip/pic32c/pic32ck_sg_gc/pic32ck_sg01/soc.h
+index 515d75b08a7..77a5aab7a22 100644
+--- a/soc/microchip/pic32c/pic32ck_sg_gc/pic32ck_sg01/soc.h
++++ b/soc/microchip/pic32c/pic32ck_sg_gc/pic32ck_sg01/soc.h
+@@ -1,6 +1,5 @@
+ /*
+- * Copyright (c) 2026 Microchip Technology Inc.
+- *
++ * SPDX-FileCopyrightText: Copyright (c) 2026 Microchip Technology Inc.
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -37,6 +36,8 @@
+ #error "Library does not support the specified device."
+ #endif
+ 
++#include "pic32ck_sg_gc.h"
++
+ #endif /* _ASMLANGUAGE */
+ 
+ #endif /* SOC_MICROCHIP_PIC32CK_SG01_H_ */
