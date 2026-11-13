@@ -1,54 +1,54 @@
 {
   "release": "main",
-  "commit": "067b436821b6e1079875271807b94106f58deeb5",
+  "commit": "2fc3833171e6941a7f4ef1fc1d605ad998685534",
   "repo": "https://github.com/DojoFive/cra-boot-security-pic32ck",
   "boards": {
     "pic32ck_sg01_cnano": {
       "files": {
         "app_forged.unsigned.bin": {
           "path": "firmware/pic32ck_sg01_cnano/app_forged.unsigned.bin",
-          "size": 40788,
-          "sha256": "6573a2ef4d9950a7194bb0b405d44efe717f409c01fd4138ea8a3eecdfc573a7"
+          "size": 40784,
+          "sha256": "d73718acd919b65f5cbb5d1e48a7af91e98d494ede05cb04a612a4cf51c3f626"
         },
         "app_ownkey.signed.bin": {
           "path": "firmware/pic32ck_sg01_cnano/app_ownkey.signed.bin",
-          "size": 40906,
-          "sha256": "a3a05f1b5fbb1e3c31836aa9f158627015cbcbc16013035db691e0385e3e9cd9"
+          "size": 40903,
+          "sha256": "bdb5e22f8ea7ce4af71560d65626f85a3e8bd2cc79498290a0077e5f1a291aba"
         },
         "app_v1.1.signed.bin": {
           "path": "firmware/pic32ck_sg01_cnano/app_v1.1.signed.bin",
-          "size": 40996,
-          "sha256": "0d46f8f3e00ec4cd6bb1a31915a51bae2869c388a926e14d3f09862d04c19c7b"
+          "size": 40992,
+          "sha256": "c06c19b97da4e1286cbf27887d87c2d78b22f22d17707d8a9bbd10ed5293abb7"
         },
         "app_v2.signed.bin": {
           "path": "firmware/pic32ck_sg01_cnano/app_v2.signed.bin",
-          "size": 40846,
-          "sha256": "ff7bd07014a77081c8be6a5efc73b7ada16d38424ca399ce882c8d86570eae3d"
+          "size": 40842,
+          "sha256": "d84d9639b50af8d60c4c520ee2cc585a5efa01a770a65ffabf414ab22e0d98b8"
         },
         "blinky.hex": {
           "path": "firmware/pic32ck_sg01_cnano/blinky.hex",
-          "size": 60568,
-          "sha256": "ee5519611afcca175a266940b23b767b42588eb704b70de4066a57bb296e36a2"
+          "size": 60560,
+          "sha256": "499ecfd8446b5b188ebaea4e095361419083de6688a74533710b52b5404f6068"
         },
         "provision_attacker.hex": {
           "path": "firmware/pic32ck_sg01_cnano/provision_attacker.hex",
-          "size": 191140,
-          "sha256": "856cefeac25224cdecdee246cceaba1493bc7c16feac2e364ac039b3d0a8e065"
+          "size": 191112,
+          "sha256": "5e91094fc8a272a2dd067b3e73e2371002e785c6564d4c696d3f29fdbc5a0380"
         },
         "provision_hash.hex": {
           "path": "firmware/pic32ck_sg01_cnano/provision_hash.hex",
-          "size": 191404,
-          "sha256": "2a6220db679216249c306383de8fbddac54a66cf4d734374589f08b20d783164"
+          "size": 191376,
+          "sha256": "8c78f3b549e76f3099452641b07631b37d3a891accf73432b14079d0cc417669"
         },
         "provision_rollback.hex": {
           "path": "firmware/pic32ck_sg01_cnano/provision_rollback.hex",
-          "size": 204464,
-          "sha256": "1088e930a7f3d3fd20bda16ec3172f82d9485afd67a1f01b61099e337b9f1ec7"
+          "size": 204448,
+          "sha256": "cf039994eebdeb861bdc70bf08132669c9e2cad5259e12882b9f9b04f3048482"
         },
         "provision_signed.hex": {
           "path": "firmware/pic32ck_sg01_cnano/provision_signed.hex",
-          "size": 204488,
-          "sha256": "c8e8192def281e26ae7fec432acf6b3db62854a12cc78d3c7c0f32cbe1301f7b"
+          "size": 204460,
+          "sha256": "8761cf5e06cc2e80afc47431dc5848c4779bf6d5492c4e4540dcf744604d7014"
         },
         "PIC32CK_SG_BFM.FLM": {
           "path": "firmware/flm/PIC32CK_SG_BFM.FLM",

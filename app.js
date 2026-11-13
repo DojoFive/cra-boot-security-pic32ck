@@ -4,6 +4,7 @@
 import { parseHex } from './pkg/hex.js';
 import { Dap, HidTransport } from './pkg/dap.js';
 import { parseFlm, FlashAlgo } from './pkg/flash_flm.js';
+import { park, run } from './pkg/pic32ck.js';
 import { Smp } from './pkg/smp.js';
 
 /* Hardware facts; firmware files come from manifest.json. */
@@ -171,6 +172,7 @@ const $ = (id) => document.getElementById(id);
 const state = {
 	manifest: null, smp: null, port: null, probe: false, locked: null, logs: [], busy: false,
 	boot: null, running: null, watch: null, focus: null, active: null, expandAll: false, trucks: 0,
+	opening: false,
 };
 
 function log(msg, el = 'activity') {
@@ -221,29 +223,55 @@ function inUse(what, e) {
 		+ `that tab, then try again. (${e.message})`);
 }
 
+/*
+ * The browser cannot tell which serial port belongs to which debugger, so
+ * with two boards attached a step could flash one and listen to the other.
+ */
+const ONE_BOARD = 'More than one board is plugged in. Unplug all but one, then try again.';
+
 /* ---------- serial / SMP ---------- */
 
-async function connectSerial() {
-	const known = (await navigator.serial.getPorts()).find((p) => {
-		const i = p.getInfo();
-		return BOARD.serialFilters.some((f) => f.usbVendorId === i.usbVendorId && f.usbProductId === i.usbProductId);
-	});
-	const port = known ?? await navigator.serial.requestPort({ filters: BOARD.serialFilters });
-	try {
-		await port.open({ baudRate: 115200 });
-	} catch (e) {
-		throw inUse('The serial port', e);
+/*
+ * Open the board's serial port. A port the user allowed before opens without
+ * asking, so plugging the board in is enough; `ask` shows the browser's
+ * chooser when there is none, and needs a click.
+ */
+async function connectSerial(ask) {
+	/* Plugging in fires a serial and a debugger event at once; only one of them may open the port. */
+	if (state.smp !== null || state.opening) {
+		return;
 	}
-	state.port = port;
-	state.smp = new Smp(port, (line) => {
-		log(line, 'console');
-		watchConsole(line);
-	});
-	state.smp.onRetry = (off, n) => log(`No answer at offset ${off}, asking again (retry ${n})`);
-	$('serial-dot').className = 'dot ok';
-	$('serial-state').textContent = 'Connected';
-	$('serial-btn').textContent = 'Disconnect';
-	port.addEventListener('disconnect', () => dropSerial('Serial port unplugged'));
+	state.opening = true;
+	try {
+		const known = (await navigator.serial.getPorts()).filter((p) => {
+			const i = p.getInfo();
+			return BOARD.serialFilters.some((f) => f.usbVendorId === i.usbVendorId && f.usbProductId === i.usbProductId);
+		});
+		if (known.length > 1) {
+			throw new Error(ONE_BOARD);
+		}
+		if (known.length === 0 && !ask) {
+			return;
+		}
+		const port = known[0] ?? await navigator.serial.requestPort({ filters: BOARD.serialFilters });
+		try {
+			await port.open({ baudRate: 115200 });
+		} catch (e) {
+			throw inUse('The serial port', e);
+		}
+		state.port = port;
+		state.smp = new Smp(port, (line) => {
+			log(line, 'console');
+			watchConsole(line);
+		});
+		state.smp.onRetry = (off, n) => log(`No answer at offset ${off}, asking again (retry ${n})`);
+		$('serial-dot').className = 'dot ok';
+		$('serial-state').textContent = 'Connected';
+		port.addEventListener('disconnect', () => dropSerial());
+	} finally {
+		state.opening = false;
+	}
+	render();
 	await checkFuse();
 }
 
@@ -255,7 +283,7 @@ async function dropSerial(reason = 'Not connected') {
 	await port?.close().catch(() => {});
 	$('serial-dot').className = 'dot';
 	$('serial-state').textContent = reason;
-	$('serial-btn').textContent = 'Connect';
+	state.running = null;
 	setFuse(null);
 }
 
@@ -315,7 +343,36 @@ async function updateProbe() {
 	state.probe = (await navigator.hid.getDevices()).some(isProbe);
 	$('probe-dot').className = `dot ${state.probe ? 'ok' : ''}`;
 	$('probe-state').textContent = state.probe ? 'Ready' : 'Not connected';
-	$('probe-btn').textContent = state.probe ? 'Reset board' : 'Connect';
+	render();
+}
+
+/* Both links up. Every step needs this, so nothing is flashed without its console showing. */
+const boardReady = () => state.smp !== null && state.probe;
+
+/* Bring up whatever the browser already has permission for; never asks. */
+async function autoConnect() {
+	if ('hid' in navigator) {
+		await updateProbe();
+	}
+	if ('serial' in navigator) {
+		await connectSerial(false).catch((e) => log(`Error: ${e.message}`));
+	}
+}
+
+/* The Connect board button: ask for whichever link the browser has not been allowed yet. */
+async function connectBoard() {
+	try {
+		await connectSerial(true);
+		if (!state.probe) {
+			await navigator.hid.requestDevice({ filters: BOARD.probeFilters });
+			await updateProbe();
+		}
+	} catch (e) {
+		/* Closing a chooser is not an error worth showing. */
+		if (e.name !== 'NotFoundError' && e.name !== 'AbortError') {
+			log(`Error: ${e.message}`);
+		}
+	}
 	render();
 }
 
@@ -323,8 +380,11 @@ async function openProbe() {
 	if (!('hid' in navigator)) {
 		throw new Error('This browser has no WebHID. Use Chrome or Edge.');
 	}
-	const device = (await navigator.hid.getDevices()).find(isProbe)
-		?? (await navigator.hid.requestDevice({ filters: BOARD.probeFilters }))[0];
+	const connected = (await navigator.hid.getDevices()).filter(isProbe);
+	if (connected.length > 1) {
+		throw new Error(ONE_BOARD);
+	}
+	const device = connected[0] ?? (await navigator.hid.requestDevice({ filters: BOARD.probeFilters }))[0];
 	if (device === undefined) {
 		throw new Error('No debugger selected');
 	}
@@ -351,6 +411,8 @@ async function withProbe(fn) {
 	}
 	log(`Debugger connected, DPIDR 0x${dap.dpidr.toString(16)}`);
 	try {
+		/* Through the boot ROM, so this works whatever is in flash, a blank chip included. */
+		await park(dap);
 		return await fn(dap);
 	} finally {
 		await dap.disconnect();
@@ -368,13 +430,13 @@ async function flashSegments(segments, erase = []) {
 			log(`Programming ${flm.device.name} with the Microchip flash algorithm`);
 			await algo.program(segments, tag);
 		}
-		await dap.resetRun();
+		await run(dap);
 	});
 	log('Flash done, target reset');
 }
 
 async function resetBoard() {
-	await withProbe((dap) => dap.resetRun());
+	await withProbe((dap) => run(dap));
 	log('Target reset');
 }
 
@@ -481,7 +543,7 @@ async function act(step) {
 	state.active = step.id;
 	state.watch = step.seen ? { id: step.id, seen: step.seen } : null;
 	results.delete(step.id);
-	if (step.truck && !missingLink(step)) {
+	if (step.truck && !missingLink()) {
 		truckRoll();
 	}
 	render();
@@ -586,18 +648,15 @@ const VERB = {
 	erase: ['Erase the chip', 'Erasing…'],
 };
 
-/* The connection a step needs and does not have: 'serial', 'probe' or null. */
-function missingLink(step) {
-	const kind = Object.keys(step.do)[0];
-	const needs = kind === 'flash' || kind === 'erase' ? 'probe' : 'serial';
-	return (needs === 'serial' ? state.smp === null : !state.probe) ? needs : null;
+/* True when a step cannot run because the board is not fully connected. */
+function missingLink() {
+	return !boardReady();
 }
 
 /* The button for a step, with the reason when it cannot be pressed yet. */
 function action(step) {
 	const kind = Object.keys(step.do)[0];
-	const needs = missingLink(step);
-	const missing = needs !== null;
+	const missing = missingLink();
 	const go = el('div', 'go');
 	/* The OEM's debugger is the factory's programmer; the attacker's is a probe on a bench. */
 	const verb = VERB[kind === 'flash' && step.role === 'oem' ? 'factory' : kind];
@@ -607,7 +666,7 @@ function action(step) {
 	b.addEventListener('click', () => act(step));
 	go.append(b);
 	if (missing) {
-		go.append(el('span', '', `Connect ${needs === 'serial' ? 'Serial' : 'Debugger'} in the bar below first.`));
+		go.append(el('span', '', 'Connect the board in the bar below first.'));
 	}
 	return go;
 }
@@ -688,7 +747,14 @@ function render() {
 	$('dev-running').textContent = run ? `v${run.version}${run.gotYou ? ', attacker code' : ''}` : 'unknown';
 	$('dev-running').className = run?.gotYou ? 'pwned' : '';
 	$('fuse-btn').disabled = state.smp === null;
-	$('probe-btn').disabled = state.busy || !('hid' in navigator);
+	const ready = boardReady();
+	$('connect-btn').hidden = ready;
+	$('connect-btn').textContent = state.smp === null && !state.probe ? 'Connect board'
+		: state.smp === null ? 'Connect serial' : 'Connect debugger';
+	$('reset-btn').hidden = !ready;
+	$('reset-btn').disabled = state.busy;
+	$('disconnect-btn').hidden = state.smp === null;
+	$('disconnect-btn').disabled = state.busy;
 	$('trucks').textContent = String(state.trucks);
 	$('trucks').parentElement.hidden = state.trucks === 0;
 }
@@ -876,19 +942,19 @@ async function init() {
 	try {
 		state.boot = localStorage.getItem(BOOT_KEY);
 	} catch { /* storage blocked */ }
-	$('serial-btn').addEventListener('click', () => (state.smp ? dropSerial() : connectSerial().catch((e) => log(`Error: ${e.message}`))));
+	$('connect-btn').addEventListener('click', connectBoard);
+	$('disconnect-btn').addEventListener('click', () => dropSerial());
 	$('fuse-btn').addEventListener('click', checkFuse);
+	/* Plugging a known board in connects it; unplugging drops both links. */
 	if ('hid' in navigator) {
-		navigator.hid.addEventListener('connect', updateProbe);
+		navigator.hid.addEventListener('connect', autoConnect);
 		navigator.hid.addEventListener('disconnect', updateProbe);
-		await updateProbe();
 	}
-	$('probe-btn').addEventListener('click', async () => {
-		if (!state.probe) {
-			await navigator.hid.requestDevice({ filters: BOARD.probeFilters }).catch(() => {});
-			await updateProbe();
-			return;
-		}
+	if ('serial' in navigator) {
+		navigator.serial.addEventListener('connect', autoConnect);
+	}
+	await autoConnect();
+	$('reset-btn').addEventListener('click', async () => {
 		state.busy = true;
 		render();
 		await resetBoard().catch((e) => log(`Error: ${e.message}`));

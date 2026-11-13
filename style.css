@@ -141,7 +141,10 @@ button { font: inherit; }
 }
 .move.oem .act { background: var(--oem); }
 .move.attacker .act { background: var(--attacker); }
-.act:disabled { opacity: 0.35; cursor: not-allowed; }
+/* Unavailable reads as plainly grey, whichever side the step belongs to. */
+.act:disabled, .move.oem .act:disabled, .move.attacker .act:disabled {
+	background: var(--line); color: var(--faint); cursor: not-allowed;
+}
 button:focus-visible, .drop:focus-visible, summary:focus-visible, input:focus-visible {
 	outline: 2px solid var(--fg); outline-offset: 2px;
 }
@@ -188,6 +191,8 @@ footer {
 	background: none; color: var(--dock-fg); border: 1px solid var(--dock-line);
 }
 .conn button:hover:not(:disabled) { border-color: var(--dock-muted); }
+.conn button.primary { background: var(--dock-fg); color: var(--dock-bg); border-color: var(--dock-fg); padding: 5px 16px; }
+.conn button[hidden] { display: none; }
 .conn button:disabled { opacity: 0.4; cursor: not-allowed; }
 .dock button:focus-visible { outline-color: var(--dock-fg); }
 .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--dock-line); }
@@ -196,6 +201,7 @@ footer {
 .phase { color: var(--brand); font-weight: 600; font-variant-numeric: tabular-nums; }
 .status { display: flex; flex-wrap: wrap; gap: 4px 22px; margin-left: auto; }
 .status div { display: flex; gap: 7px; align-items: center; }
+.status div[hidden] { display: none; }
 .status dt { color: var(--dock-muted); }
 .status dd { display: flex; gap: 6px; align-items: center; font-weight: 600; }
 .status dd.pwned { color: #ef6b60; }

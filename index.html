@@ -56,13 +56,16 @@
 			<span class="dot" id="serial-dot"></span>
 			<strong>Serial</strong>
 			<span id="serial-state">Not connected</span>
-			<button id="serial-btn" type="button">Connect</button>
 		</div>
 		<div class="conn">
 			<span class="dot" id="probe-dot"></span>
 			<strong>Debugger</strong>
 			<span id="probe-state">Not connected</span>
-			<button id="probe-btn" type="button">Connect</button>
+		</div>
+		<div class="conn">
+			<button id="connect-btn" type="button" class="primary">Connect board</button>
+			<button id="reset-btn" type="button" hidden>Reset board</button>
+			<button id="disconnect-btn" type="button" hidden>Disconnect</button>
 		</div>
 		<span class="phase" id="phase" aria-live="polite"></span>
 		<dl class="status">
@@ -81,7 +84,7 @@
 		</span>
 	</header>
 	<div id="console" class="term" role="log" aria-live="polite"
-		data-empty="Plug in the board, then connect Serial and Debugger above. The board's console appears here."></div>
+		data-empty="Plug in one board and select Connect board above. The browser asks once for its serial port and once for its debugger, then remembers both. The board's console appears here."></div>
 </section>
 
 <script>

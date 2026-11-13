@@ -6,9 +6,12 @@
 
 const CMD = {
 	INFO: 0x00, CONNECT: 0x02, DISCONNECT: 0x03, TRANSFER_CONFIGURE: 0x04,
-	TRANSFER: 0x05, TRANSFER_BLOCK: 0x06, SWJ_CLOCK: 0x11, SWJ_SEQUENCE: 0x12,
+	TRANSFER: 0x05, TRANSFER_BLOCK: 0x06, SWJ_PINS: 0x10, SWJ_CLOCK: 0x11, SWJ_SEQUENCE: 0x12,
 	SWD_CONFIGURE: 0x13,
 };
+
+/** DAP_SWJ_Pins bits. */
+export const PIN = { SWCLK: 0x01, NRESET: 0x80 };
 
 const APnDP = 0x01;
 const RnW = 0x02;
@@ -110,6 +113,11 @@ export class Dap {
 		await this.cmd([CMD.SWJ_CLOCK, ...u32(clockHz)]);
 		await this.cmd([CMD.TRANSFER_CONFIGURE, 0, 0x50, 0x00, 0x00, 0x00]);
 		await this.cmd([CMD.SWD_CONFIGURE, 0]);
+		await this.dpInit();
+	}
+
+	/** Bring up the debug port and the first access port; also after a target reset. */
+	async dpInit() {
 		await this.lineReset();
 		this.dpidr = await this.readDP(DP.DPIDR);
 		await this.writeDP(DP.ABORT, 0x1e);
@@ -133,6 +141,11 @@ export class Dap {
 		await this.cmd([CMD.SWJ_SEQUENCE, 16, 0x9e, 0xe7]);
 		await this.cmd([CMD.SWJ_SEQUENCE, 51, ...ones]);
 		await this.cmd([CMD.SWJ_SEQUENCE, 8, 0x00]);
+	}
+
+	/** Drive the probe's pins directly: set the `select`ed pins to `output`, wait, return all pins. */
+	async swjPins(output, select, waitUs = 0) {
+		return (await this.cmd([CMD.SWJ_PINS, output, select, ...u32(waitUs)]))[1];
 	}
 
 	async disconnect() {
