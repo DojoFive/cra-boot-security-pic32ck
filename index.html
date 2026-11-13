@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!-- SPDX-FileCopyrightText: Copyright (c) 2026 Dojo Five -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Root of Trust to Release</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+	<h1>Root of Trust to Release</h1>
+	<p class="lede">One board, two players. Ship a product as the OEM, break into it as the attacker,
+		then find out what each fix costs once the product is in the field. Three rounds.</p>
+	<p class="meta">
+		<span>PIC32CK SG01 Curiosity Nano+ Touch</span>
+		<a id="guide" target="_blank" rel="noopener" hidden>Source and build steps</a>
+		<label><input type="checkbox" id="expand"> Show every step in full</label>
+	</p>
+	<p class="notice" id="support" hidden></p>
+</header>
+
+<main>
+	<div class="sides" aria-hidden="true">
+		<div><strong>OEM</strong><span>builds and ships the product</span></div>
+		<span></span>
+		<div><strong>Attacker</strong><span>wants their own code on it</span></div>
+	</div>
+
+	<div id="rounds"></div>
+
+	<section class="after" aria-labelledby="after-h">
+		<h2 id="after-h">Run it again</h2>
+		<ul class="plain" id="reset"></ul>
+		<details>
+			<summary>Use your own build</summary>
+			<div class="drop" id="drop" tabindex="0">Drop a <code>.hex</code> to flash over the debugger,
+				or a signed <code>.bin</code> to send as an update.</div>
+			<input type="file" id="file" accept=".hex,.bin" hidden>
+		</details>
+	</section>
+
+	<footer>
+		<span id="release">Loading firmware list…</span>
+		<span>Images are signed with MCUboot's public test key. Never ship it.</span>
+	</footer>
+</main>
+
+<section class="dock" aria-label="Board">
+	<div class="grip" id="grip" role="separator" aria-orientation="horizontal" tabindex="0"
+		aria-label="Resize the board panel" title="Drag to resize. Double-click to reset."></div>
+	<div class="progress" id="progress" hidden><div id="bar"></div></div>
+	<header class="dock-bar">
+		<div class="conn">
+			<span class="dot" id="serial-dot"></span>
+			<strong>Serial</strong>
+			<span id="serial-state">Not connected</span>
+			<button id="serial-btn" type="button">Connect</button>
+		</div>
+		<div class="conn">
+			<span class="dot" id="probe-dot"></span>
+			<strong>Debugger</strong>
+			<span id="probe-state">Not connected</span>
+			<button id="probe-btn" type="button">Connect</button>
+		</div>
+		<span class="phase" id="phase" aria-live="polite"></span>
+		<dl class="status">
+			<div><dt>Bootloader</dt><dd id="dev-boot">unknown</dd></div>
+			<div><dt>Running</dt><dd id="dev-running">unknown</dd></div>
+			<div hidden><dt>Truck rolls</dt><dd id="trucks">0</dd></div>
+			<div>
+				<dt>Debug port</dt>
+				<dd><span class="dot" id="fuse-dot"></span><span id="fuse-state">unknown</span>
+					<button id="fuse-btn" type="button" class="quiet">Check</button></dd>
+			</div>
+		</dl>
+		<span class="tools">
+			<button id="save-log" type="button" class="quiet">Download log</button>
+			<button id="clear-log" type="button" class="quiet">Clear</button>
+		</span>
+	</header>
+	<div id="console" class="term" role="log" aria-live="polite"
+		data-empty="Plug in the board, then connect Serial and Debugger above. The board's console appears here."></div>
+</section>
+
+<script>
+	/* Module scripts, WebHID and Web Serial do not work from file:// URLs. */
+	if (location.protocol === 'file:') {
+		document.getElementById('release').textContent =
+			'Open this page through a web server, not as a file: ' +
+			'python3 -m http.server -d site 8000, then http://localhost:8000';
+	}
+</script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

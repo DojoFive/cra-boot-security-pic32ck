@@ -1,0 +1,70 @@
+{
+  "release": "main",
+  "commit": "067b436821b6e1079875271807b94106f58deeb5",
+  "repo": "https://github.com/DojoFive/cra-boot-security-pic32ck",
+  "boards": {
+    "pic32ck_sg01_cnano": {
+      "files": {
+        "app_forged.unsigned.bin": {
+          "path": "firmware/pic32ck_sg01_cnano/app_forged.unsigned.bin",
+          "size": 40788,
+          "sha256": "6573a2ef4d9950a7194bb0b405d44efe717f409c01fd4138ea8a3eecdfc573a7"
+        },
+        "app_ownkey.signed.bin": {
+          "path": "firmware/pic32ck_sg01_cnano/app_ownkey.signed.bin",
+          "size": 40906,
+          "sha256": "a3a05f1b5fbb1e3c31836aa9f158627015cbcbc16013035db691e0385e3e9cd9"
+        },
+        "app_v1.1.signed.bin": {
+          "path": "firmware/pic32ck_sg01_cnano/app_v1.1.signed.bin",
+          "size": 40996,
+          "sha256": "0d46f8f3e00ec4cd6bb1a31915a51bae2869c388a926e14d3f09862d04c19c7b"
+        },
+        "app_v2.signed.bin": {
+          "path": "firmware/pic32ck_sg01_cnano/app_v2.signed.bin",
+          "size": 40846,
+          "sha256": "ff7bd07014a77081c8be6a5efc73b7ada16d38424ca399ce882c8d86570eae3d"
+        },
+        "blinky.hex": {
+          "path": "firmware/pic32ck_sg01_cnano/blinky.hex",
+          "size": 60568,
+          "sha256": "ee5519611afcca175a266940b23b767b42588eb704b70de4066a57bb296e36a2"
+        },
+        "provision_attacker.hex": {
+          "path": "firmware/pic32ck_sg01_cnano/provision_attacker.hex",
+          "size": 191140,
+          "sha256": "856cefeac25224cdecdee246cceaba1493bc7c16feac2e364ac039b3d0a8e065"
+        },
+        "provision_hash.hex": {
+          "path": "firmware/pic32ck_sg01_cnano/provision_hash.hex",
+          "size": 191404,
+          "sha256": "2a6220db679216249c306383de8fbddac54a66cf4d734374589f08b20d783164"
+        },
+        "provision_rollback.hex": {
+          "path": "firmware/pic32ck_sg01_cnano/provision_rollback.hex",
+          "size": 204464,
+          "sha256": "1088e930a7f3d3fd20bda16ec3172f82d9485afd67a1f01b61099e337b9f1ec7"
+        },
+        "provision_signed.hex": {
+          "path": "firmware/pic32ck_sg01_cnano/provision_signed.hex",
+          "size": 204488,
+          "sha256": "c8e8192def281e26ae7fec432acf6b3db62854a12cc78d3c7c0f32cbe1301f7b"
+        },
+        "PIC32CK_SG_BFM.FLM": {
+          "path": "firmware/flm/PIC32CK_SG_BFM.FLM",
+          "size": 10492,
+          "sha256": "25de444ee060871a416c3f87586b8d185319a4a2c3c594838fc2f833265de574"
+        },
+        "PIC32CK_SG_PFM_2048.FLM": {
+          "path": "firmware/flm/PIC32CK_SG_PFM_2048.FLM",
+          "size": 10388,
+          "sha256": "51aed98c99ef65244cbeef005f30687bb709dc5f96ed3be4a16c8474d1865050"
+        }
+      },
+      "flm": [
+        "PIC32CK_SG_BFM.FLM",
+        "PIC32CK_SG_PFM_2048.FLM"
+      ]
+    }
+  }
+}
